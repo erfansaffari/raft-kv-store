@@ -1,0 +1,13 @@
+/data/
+*.tmp
+raft_state.json
+
+# Go
+/bin/
+/dist/
+/helloworld
+
+# IDE
+.idea/
+.vscode/
+*.swp
