@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"net"
 
+	"github.com/erfansaffari/raft-kv-store/internal/command"
 	"github.com/erfansaffari/raft-kv-store/internal/rpc"
 )
 
 type Server struct {
 	store *Store
+	log   *Log
 	ln    net.Listener
 }
 
@@ -17,7 +19,7 @@ func NewServer(addr string) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Server{store: NewStore(), ln: ln}, nil
+	return &Server{store: NewStore(), log: NewLog(), ln: ln}, nil
 }
 
 func (s *Server) Serve() error {
@@ -43,12 +45,24 @@ func (s *Server) handleConn(conn net.Conn) {
 			if err := json.Unmarshal(msg.Body, &req); err != nil {
 				return
 			}
-			result := s.store.Apply(req.Cmd)
+			result := s.handleCommand(req.Cmd)
 			_ = rpc.WriteMessage(conn, rpc.MsgClientResponse, rpc.ClientResponse{
 				OK:     true,
 				Result: result,
 			})
 		}
+	}
+}
+
+func (s *Server) handleCommand(cmd command.Command) command.ApplyResult {
+	switch cmd.Op {
+	case "SET", "DELETE":
+		s.log.Append(cmd)
+		return s.store.Apply(cmd)
+	case "GET":
+		return s.store.Apply(cmd)
+	default:
+		return command.ApplyResult{}
 	}
 }
 
