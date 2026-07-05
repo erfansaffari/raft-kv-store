@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/erfansaffari/raft-kv-store/internal/kv"
+	"github.com/erfansaffari/raft-kv-store/internal/command"
 )
 
 func TestWriteReadMessage_ClientRequest(t *testing.T) {
@@ -13,7 +13,7 @@ func TestWriteReadMessage_ClientRequest(t *testing.T) {
 
 	req := ClientRequest{
 		ID:  "req-1",
-		Cmd: kv.Command{Op: "SET", Key: "foo", Value: "bar"},
+		Cmd: command.Command{Op: "SET", Key: "foo", Value: "bar"},
 	}
 
 	if err := WriteMessage(&buf, MsgClientRequest, req); err != nil {
@@ -43,7 +43,7 @@ func TestWriteReadMessage_ClientResponse(t *testing.T) {
 
 	resp := ClientResponse{
 		OK:     true,
-		Result: kv.ApplyResult{Value: "bar", Found: true},
+		Result: command.ApplyResult{Value: "bar", Found: true},
 	}
 
 	if err := WriteMessage(&buf, MsgClientResponse, resp); err != nil {
@@ -75,8 +75,8 @@ func TestWriteReadMessage_MultipleMessages(t *testing.T) {
 		msgType string
 		body    any
 	}{
-		{MsgClientRequest, ClientRequest{ID: "1", Cmd: kv.Command{Op: "GET", Key: "a"}}},
-		{MsgClientResponse, ClientResponse{OK: true, Result: kv.ApplyResult{Found: false}}},
+		{MsgClientRequest, ClientRequest{ID: "1", Cmd: command.Command{Op: "GET", Key: "a"}}},
+		{MsgClientResponse, ClientResponse{OK: true, Result: command.ApplyResult{Found: false}}},
 		{MsgRequestVote, RequestVoteArgs{Term: 2, CandidateID: 1, LastLogIndex: 3, LastLogTerm: 1}},
 	}
 

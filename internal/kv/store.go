@@ -1,6 +1,10 @@
 package kv
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/erfansaffari/raft-kv-store/internal/command"
+)
 
 type Store struct {
 	mu   sync.RWMutex
@@ -14,23 +18,23 @@ func NewStore() *Store {
 }
 
 // Apply executes one command and returns the result.
-func (s *Store) Apply(cmd Command) ApplyResult {
+func (s *Store) Apply(cmd command.Command) command.ApplyResult {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	switch cmd.Op {
 	case "SET":
 		s.data[cmd.Key] = cmd.Value
-		return ApplyResult{}
+		return command.ApplyResult{}
 	case "DELETE":
 		_, found := s.data[cmd.Key]
 		delete(s.data, cmd.Key)
-		return ApplyResult{Found: found}
+		return command.ApplyResult{Found: found}
 	case "GET":
 		value, ok := s.data[cmd.Key]
-		return ApplyResult{Value: value, Found: ok}
+		return command.ApplyResult{Value: value, Found: ok}
 	default:
-		return ApplyResult{}
+		return command.ApplyResult{}
 	}
 }
 
